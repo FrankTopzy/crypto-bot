@@ -1,4 +1,5 @@
 .env
 venv/
 _pycache_/
+*.pyc
 processed_posts.json
