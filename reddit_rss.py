@@ -1,21 +1,51 @@
-import requests
 import html
 import re
+import time
 import xml.etree.ElementTree as ET
+
+import requests
+
+
+LAST_REQUEST_TIME = 0
+REQUEST_DELAY = 65
+
+HEADERS = {
+    "User-Agent": "CryptoRedditAlertBot/1.0 by FrankTopzy"
+}
 
 
 def get_posts(subreddit):
-    url = f"https://www.reddit.com/r/{subreddit}/new/.rss"
+    global LAST_REQUEST_TIME
 
-    headers = {
-        "User-Agent": "CryptoRedditAlertBot/1.0"
-    }
+    # Wait between Reddit requests
+    elapsed = time.time() - LAST_REQUEST_TIME
+
+    if elapsed < REQUEST_DELAY:
+        wait_time = REQUEST_DELAY - elapsed
+
+        print(
+            f"⏳ Waiting {wait_time:.0f}s before "
+            f"checking r/{subreddit}..."
+        )
+
+        time.sleep(wait_time)
+
+    url = f"https://www.reddit.com/r/{subreddit}/new/.rss"
 
     response = requests.get(
         url,
-        headers=headers,
+        headers=HEADERS,
         timeout=20
     )
+
+    LAST_REQUEST_TIME = time.time()
+
+    if response.status_code == 429:
+        print(
+            f"⚠️ Reddit rate-limited r/{subreddit} (429). "
+            "Skipping this check."
+        )
+        return []
 
     response.raise_for_status()
 
@@ -86,17 +116,15 @@ def get_posts(subreddit):
                 ""
             )
 
-        # Reddit's RSS body contains HTML.
+        # Clean Reddit's HTML content
         body = html.unescape(body)
 
-        # Remove HTML tags.
         body = re.sub(
             r"<[^>]+>",
             " ",
             body
         )
 
-        # Clean extra whitespace.
         body = re.sub(
             r"\s+",
             " ",

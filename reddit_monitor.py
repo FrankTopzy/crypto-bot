@@ -11,6 +11,7 @@ processed_posts = set()
 def process_post(post):
     post_id = post["id"]
 
+    # Don't process the same Reddit post twice.
     if post_id in processed_posts:
         return
 
@@ -37,7 +38,8 @@ def process_post(post):
         print("\n🚨 MATCH FOUND")
         print(message)
 
-        send_message(message)
+        response = send_message(message)
+        print("Telegram response:", response)
 
 
 def check_reddit():
@@ -47,22 +49,37 @@ def check_reddit():
 
             posts = get_posts(subreddit)
 
-            print(f"Found {len(posts)} posts.")
+            print(
+                f"Found {len(posts)} posts."
+            )
 
             for post in posts:
                 process_post(post)
 
         except Exception as error:
-            print(f"Error checking r/{subreddit}: {error}")
+            print(
+                f"Error checking "
+                f"r/{subreddit}: {error}"
+            )
 
 
 def start_monitor(interval=60):
     print("🚀 Crypto Reddit Alert Bot Started")
-    print(f"📡 Monitoring {len(SUBREDDITS)} subreddits")
-    print(f"⏱️ Checking every {interval} seconds\n")
+    print(
+        f"📡 Monitoring "
+        f"{len(SUBREDDITS)} subreddits"
+    )
+    print(
+        f"⏱️ Checking every "
+        f"{interval} seconds\n"
+    )
 
     while True:
         check_reddit()
 
-        print(f"\n⏳ Waiting {interval} seconds...\n")
+        print(
+            f"\n⏳ Waiting "
+            f"{interval} seconds...\n"
+        )
+
         time.sleep(interval)
