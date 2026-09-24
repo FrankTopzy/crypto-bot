@@ -1,11 +1,15 @@
-import time
+from reddit_monitor import process_post
 
 
-count = 1
+test_post = {
+    "id": "TEST_FULL_PIPELINE_001",
+    "title": "I can't withdraw my BTC from Coinbase",
+    "body": "I have tried several times but my Bitcoin withdrawal is stuck.",
+    "subreddit": "coinbase",
+    "author": "test_user",
+    "url": "https://www.reddit.com/r/coinbase/",
+}
 
-while True:
-    print(f"Checking Reddit... check #{count}")
+process_post(test_post)
 
-    count += 1
-
-    time.sleep(5)
+print("\n✅ Full pipeline test completed.")

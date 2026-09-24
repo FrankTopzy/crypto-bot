@@ -17,7 +17,7 @@ HEADERS = {
 def get_posts(subreddit):
     global LAST_REQUEST_TIME
 
-    # Wait between Reddit requests
+    # Make sure there is enough time between Reddit requests.
     elapsed = time.time() - LAST_REQUEST_TIME
 
     if elapsed < REQUEST_DELAY:
@@ -116,7 +116,6 @@ def get_posts(subreddit):
                 ""
             )
 
-        # Clean Reddit's HTML content
         body = html.unescape(body)
 
         body = re.sub(

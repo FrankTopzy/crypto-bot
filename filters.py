@@ -1,12 +1,11 @@
 SUBREDDITS = [
     "coinbase",
     "kraken",
-    "trustwallet",
+    "trustwalletcommunity",
     "metamask",
     "tangem",
     "ledgerwallet",
     "phantom",
-    "rabbywallet",
     "defi",
     "solana",
 ]
