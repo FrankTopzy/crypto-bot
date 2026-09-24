@@ -1,6 +1,6 @@
 import time
 
-from filters import find_matches
+from filters import SUBREDDITS, find_matches
 from reddit_rss import get_posts
 from telegram_bot import send_message
 
@@ -9,10 +9,8 @@ processed_posts = set()
 
 
 def process_post(post):
-
     post_id = post["id"]
 
-    # Don't process the same Reddit post twice.
     if post_id in processed_posts:
         return
 
@@ -21,18 +19,12 @@ def process_post(post):
     title = post["title"]
     body = post["body"]
 
-    # Use your existing filter.
-    matches = find_matches(
-        title,
-        body
-    )
+    matches = find_matches(title, body)
 
-    # No relevant problem found.
     if not matches:
         return
 
     for match in matches:
-
         message = (
             "🚨 CRYPTO ALERT\n\n"
             f"Type: {match}\n\n"
@@ -49,46 +41,28 @@ def process_post(post):
 
 
 def check_reddit():
-
-    for subreddit in [
-        "coinbase",
-        "kraken",
-        "trustwallet",
-        "metamask",
-        "tangem",
-        "ledgerwallet",
-        "phantom",
-        "rabbywallet",
-        "defi",
-        "solana",
-    ]:
-
+    for subreddit in SUBREDDITS:
         try:
-
-            print(
-                f"Checking r/{subreddit}..."
-            )
+            print(f"Checking r/{subreddit}...")
 
             posts = get_posts(subreddit)
+
+            print(f"Found {len(posts)} posts.")
 
             for post in posts:
                 process_post(post)
 
         except Exception as error:
-
-            print(
-                f"Error checking "
-                f"r/{subreddit}: {error}"
-            )
+            print(f"Error checking r/{subreddit}: {error}")
 
 
-print("🚀 Crypto Reddit Alert Bot Started")
+def start_monitor(interval=60):
+    print("🚀 Crypto Reddit Alert Bot Started")
+    print(f"📡 Monitoring {len(SUBREDDITS)} subreddits")
+    print(f"⏱️ Checking every {interval} seconds\n")
 
+    while True:
+        check_reddit()
 
-while True:
-
-    check_reddit()
-
-    print("Waiting 60 seconds...\n")
-
-    time.sleep(60)
+        print(f"\n⏳ Waiting {interval} seconds...\n")
+        time.sleep(interval)
