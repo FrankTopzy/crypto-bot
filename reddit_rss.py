@@ -40,11 +40,25 @@ def get_posts(subreddit):
 
     LAST_REQUEST_TIME = time.time()
 
+    # Handle Reddit rate limiting.
     if response.status_code == 429:
+        retry_after = response.headers.get("Retry-After")
+
+        if retry_after:
+            try:
+                retry_seconds = int(retry_after)
+            except ValueError:
+                retry_seconds = 120
+        else:
+            retry_seconds = 120
+
         print(
             f"⚠️ Reddit rate-limited r/{subreddit} (429). "
-            "Skipping this check."
+            f"Waiting {retry_seconds}s before continuing."
         )
+
+        time.sleep(retry_seconds)
+
         return []
 
     response.raise_for_status()
