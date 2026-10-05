@@ -21,7 +21,7 @@ SUBREDDITS = [
     "ExodusWallet",
     # CoinbaseWallet is a private subreddit (403) - excluded
     "KrakenSupport",
-    "blockchain",
+    # blockchain subreddit is private/restricted (403) - excluded
     "ledger",
     "TREZOR",
     # Binance
