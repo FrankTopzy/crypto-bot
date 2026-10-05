@@ -14,10 +14,22 @@ def send_message(message):
         "text": message,
     }
 
-    response = requests.post(
-        url,
-        json=data,
-        timeout=20
-    )
+    try:
+        response = requests.post(
+            url,
+            json=data,
+            timeout=20
+        )
 
-    return response.json()
+        result = response.json()
+
+        if not result.get("ok"):
+            print(f"[WARNING] Telegram API error: {result}")
+        else:
+            print("[OK] Telegram message sent successfully.")
+
+        return result
+
+    except requests.exceptions.RequestException as error:
+        print(f"❌ Failed to send Telegram message: {error}")
+        return None

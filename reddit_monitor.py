@@ -7,7 +7,11 @@ from reddit_rss import get_posts
 from telegram_bot import send_message
 
 
-PROCESSED_FILE = "/app/data/processed_posts.json"
+# Use a path relative to this file so it works on any OS.
+PROCESSED_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "processed_posts.json"
+)
 
 
 def load_processed_posts():
