@@ -1,4 +1,5 @@
 SUBREDDITS = [
+    # Original
     "coinbase",
     "kraken",
     "trustwalletcommunity",
@@ -8,6 +9,23 @@ SUBREDDITS = [
     "phantom",
     "defi",
     "solana",
+    # New exchanges
+    "OKX",
+    "Bybit",
+    "Crypto_com",
+    "kucoin",
+    "gateio",
+    "Bitget",
+    "mexc",
+    # New wallets & support
+    "ExodusWallet",
+    "CoinbaseWallet",
+    "KrakenSupport",
+    "blockchain",
+    "ledger",
+    "TREZOR",
+    # Binance
+    "binance",
 ]
 
 
