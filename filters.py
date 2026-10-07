@@ -49,14 +49,12 @@ SCAM_TERMS = [
     "my crypto was stolen",
     "lost my crypto",
     "stole my crypto",
-<<<<<<< HEAD
     "scam",
     "scammed",
     "hacked",
     "drain",
     "drained",
     "phishing",
-=======
     "my funds are gone",
     "my coins are gone",
     "my tokens are gone",
@@ -94,7 +92,6 @@ SCAM_TERMS = [
     "rugpull",
     "exit scam",
     "honeypot",
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
@@ -110,10 +107,8 @@ WITHDRAWAL_TERMS = [
     "withdrawal is pending",
     "won't let me withdraw",
     "not letting me withdraw",
-<<<<<<< HEAD
     "withdrawal issue",
     "withdraw",
-=======
     "withdrawal blocked",
     "withdrawal rejected",
     "withdrawal cancelled",
@@ -148,7 +143,6 @@ WITHDRAWAL_TERMS = [
     "pending for days",
     "pending for hours",
     "transaction not confirmed",
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
@@ -164,12 +158,10 @@ TRANSFER_TERMS = [
     "sent btc to the wrong",
     "sent eth to the wrong",
     "sent usdt to the wrong",
-<<<<<<< HEAD
     "wrong address",
     "wrong network",
     "wrong memo",
     "wrong tag",
-=======
     "sent to wrong address",
     "wrong wallet address",
     "wrong address",
@@ -182,7 +174,6 @@ TRANSFER_TERMS = [
     "accidentally transferred",
     "sent to incorrect address",
     "transferred to wrong wallet",
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
@@ -219,14 +210,12 @@ CRYPTO_TERMS = [
     "phantom",
     "ledger",
     "tangem",
-<<<<<<< HEAD
     "airdrop",
     "dex",
     "swap",
     "seed phrase",
     "private key",
     "smart contract",
-=======
     "trezor",
     "exodus",
     "bybit",
@@ -248,7 +237,6 @@ CRYPTO_TERMS = [
     "txid",
     "gas fee",
     "gas fees",
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
