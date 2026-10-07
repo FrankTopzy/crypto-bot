@@ -2,6 +2,7 @@ import html
 import re
 import time
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 
 import requests
 
@@ -98,6 +99,16 @@ def get_posts(subreddit):
             namespace
         )
 
+        updated_element = entry.find(
+            "atom:updated",
+            namespace
+        )
+
+        published_element = entry.find(
+            "atom:published",
+            namespace
+        )
+
         title = (
             title_element.text
             if title_element is not None
@@ -144,6 +155,21 @@ def get_posts(subreddit):
             body
         ).strip()
 
+        # Parse publication timestamp
+        raw_date = ""
+        if published_element is not None and published_element.text:
+            raw_date = published_element.text
+        elif updated_element is not None and updated_element.text:
+            raw_date = updated_element.text
+
+        published_timestamp = None
+        if raw_date:
+            try:
+                dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+                published_timestamp = dt.timestamp()
+            except Exception:
+                published_timestamp = None
+
         posts.append({
             "id": post_id,
             "title": title,
@@ -151,6 +177,7 @@ def get_posts(subreddit):
             "subreddit": subreddit,
             "author": author.replace("/u/", ""),
             "url": url,
+            "published_timestamp": published_timestamp,
         })
 
     return posts

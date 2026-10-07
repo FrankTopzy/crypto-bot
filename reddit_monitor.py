@@ -1,6 +1,10 @@
 import json
 import os
+import sys
 import time
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 from filters import SUBREDDITS, find_matches
 from reddit_rss import get_posts
@@ -8,6 +12,8 @@ from telegram_bot import send_message
 
 
 PROCESSED_FILE = "processed_posts.json"
+MAX_POST_AGE_HOURS = 5
+MAX_POST_AGE_SECONDS = MAX_POST_AGE_HOURS * 3600
 
 
 def load_processed_posts():
@@ -51,28 +57,37 @@ def process_post(post):
     processed_posts.add(post_id)
     save_processed_posts()
 
+    # Only alert posts within the last 5 hours
+    published_time = post.get("published_timestamp")
+    if published_time:
+        age_seconds = time.time() - published_time
+        if age_seconds > MAX_POST_AGE_SECONDS:
+            age_hours = age_seconds / 3600
+            print(
+                f"⏳ Skipping post older than {MAX_POST_AGE_HOURS}h "
+                f"({age_hours:.1f}h old): {post['title']}"
+            )
+            return
+
     title = post["title"]
     body = post["body"]
 
     matches = find_matches(title, body)
+    alert_type = " | ".join(matches) if matches else "New Post"
 
-    if not matches:
-        return
+    message = (
+        "🚨 REDDIT ALERT\n\n"
+        f"🏷️ Type: {alert_type}\n\n"
+        f"📍 r/{post['subreddit']}\n\n"
+        f"📝 {title}\n\n"
+        f"👤 u/{post['author']}\n\n"
+        f"🔗 {post['url']}"
+    )
 
-    for match in matches:
-        message = (
-            "🚨 CRYPTO ALERT\n\n"
-            f"Type: {match}\n\n"
-            f"📍 r/{post['subreddit']}\n\n"
-            f"📝 {title}\n\n"
-            f"👤 u/{post['author']}\n\n"
-            f"🔗 {post['url']}"
-        )
+    print("\n🚨 ALERT SENT")
+    print(message)
 
-        print("\n🚨 MATCH FOUND")
-        print(message)
-
-        send_message(message)
+    send_message(message)
 
 
 def seed_existing_posts():
@@ -123,7 +138,8 @@ def check_reddit():
 def start_monitor(interval=60):
     print("🚀 Crypto Reddit Alert Bot Started")
     print(f"📡 Monitoring {len(SUBREDDITS)} subreddits")
-    print(f"⏱️ Checking every {interval} seconds\n")
+    print(f"⏱️ Checking every {interval} seconds")
+    print(f"🕒 Alerting posts within the last {MAX_POST_AGE_HOURS} hours\n")
 
     if not processed_posts:
         seed_existing_posts()

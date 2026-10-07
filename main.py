@@ -1,5 +1,9 @@
+import sys
 from reddit_monitor import start_monitor
 from telegram_bot import send_message
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 
 if __name__ == "__main__":
