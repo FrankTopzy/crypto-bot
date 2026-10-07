@@ -2,23 +2,18 @@ import html
 import re
 import time
 import xml.etree.ElementTree as ET
-<<<<<<< HEAD
-from datetime import datetime, timezone
-=======
 from datetime import datetime, timezone, timedelta
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 
 import requests
 
 
 LAST_REQUEST_TIME = 0
 
-# Reduced from 65s to 3s - the RSS feed is public and handles faster polling.
-# The old 65s delay caused a full cycle to take ~24 minutes across 22 subreddits.
+# 3s delay ensures polling across all subreddits finishes promptly without overloading.
 REQUEST_DELAY = 3
 
-# Only return posts made within the last 4 hours.
-MAX_POST_AGE_HOURS = 4
+# Only return posts made within the last 5 hours.
+MAX_POST_AGE_HOURS = 5
 
 HEADERS = {
     "User-Agent": "CryptoRedditAlertBot/1.0 by FrankTopzy"
@@ -30,9 +25,7 @@ def _parse_timestamp(text):
     if not text:
         return None
     try:
-        # Reddit uses format: 2024-01-15T12:34:56+00:00
         text = text.strip()
-        # Replace Z suffix with +00:00 for compatibility
         if text.endswith("Z"):
             text = text[:-1] + "+00:00"
         return datetime.fromisoformat(text)
@@ -138,24 +131,24 @@ def get_posts(subreddit):
             namespace
         )
 
-<<<<<<< HEAD
         published_element = entry.find(
             "atom:published",
             namespace
         )
 
-=======
-        # ── 4-hour recency filter ──────────────────────────────────────────
-        post_time = _parse_timestamp(
-            updated_element.text if updated_element is not None else None
-        )
+        # ── 5-hour recency filter ──────────────────────────────────────────
+        raw_date = ""
+        if published_element is not None and published_element.text:
+            raw_date = published_element.text
+        elif updated_element is not None and updated_element.text:
+            raw_date = updated_element.text
+
+        post_time = _parse_timestamp(raw_date)
 
         if post_time is not None and post_time < cutoff:
-            # Post is older than 4 hours — skip it.
+            # Post is older than 5 hours — skip it.
             continue
 
-        # ── Extract fields ─────────────────────────────────────────────────
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
         title = (
             title_element.text
             if title_element is not None
@@ -202,25 +195,11 @@ def get_posts(subreddit):
             body
         ).strip()
 
-<<<<<<< HEAD
-        # Parse publication timestamp
-        raw_date = ""
-        if published_element is not None and published_element.text:
-            raw_date = published_element.text
-        elif updated_element is not None and updated_element.text:
-            raw_date = updated_element.text
-
-        published_timestamp = None
-        if raw_date:
-            try:
-                dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
-                published_timestamp = dt.timestamp()
-            except Exception:
-                published_timestamp = None
-=======
         # Format post age for display
         age_str = ""
+        published_timestamp = None
         if post_time is not None:
+            published_timestamp = post_time.timestamp()
             age_minutes = int(
                 (now_utc - post_time).total_seconds() / 60
             )
@@ -228,7 +207,6 @@ def get_posts(subreddit):
                 age_str = f"{age_minutes}m ago"
             else:
                 age_str = f"{age_minutes // 60}h {age_minutes % 60}m ago"
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 
         posts.append({
             "id": post_id,
@@ -237,11 +215,8 @@ def get_posts(subreddit):
             "subreddit": subreddit,
             "author": author.replace("/u/", ""),
             "url": url,
-<<<<<<< HEAD
-            "published_timestamp": published_timestamp,
-=======
             "age": age_str,
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
+            "published_timestamp": published_timestamp,
         })
 
     return posts

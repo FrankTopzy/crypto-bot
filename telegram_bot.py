@@ -20,11 +20,6 @@ def send_message(message):
             json=data,
             timeout=20
         )
-<<<<<<< HEAD
-        return response.json()
-    except Exception as error:
-        print(f"⚠️ Telegram send error: {error}")
-=======
 
         result = response.json()
 
@@ -35,7 +30,6 @@ def send_message(message):
 
         return result
 
-    except requests.exceptions.RequestException as error:
+    except Exception as error:
         print(f"❌ Failed to send Telegram message: {error}")
->>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
         return None
