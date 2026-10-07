@@ -2,34 +2,52 @@ import html
 import re
 import time
 import xml.etree.ElementTree as ET
+<<<<<<< HEAD
 from datetime import datetime, timezone
+=======
+from datetime import datetime, timezone, timedelta
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 
 import requests
 
 
 LAST_REQUEST_TIME = 0
-REQUEST_DELAY = 65
+
+# Reduced from 65s to 3s - the RSS feed is public and handles faster polling.
+# The old 65s delay caused a full cycle to take ~24 minutes across 22 subreddits.
+REQUEST_DELAY = 3
+
+# Only return posts made within the last 4 hours.
+MAX_POST_AGE_HOURS = 4
 
 HEADERS = {
     "User-Agent": "CryptoRedditAlertBot/1.0 by FrankTopzy"
 }
 
 
+def _parse_timestamp(text):
+    """Parse an ISO 8601 timestamp string into a UTC datetime."""
+    if not text:
+        return None
+    try:
+        # Reddit uses format: 2024-01-15T12:34:56+00:00
+        text = text.strip()
+        # Replace Z suffix with +00:00 for compatibility
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        return datetime.fromisoformat(text)
+    except (ValueError, TypeError):
+        return None
+
+
 def get_posts(subreddit):
     global LAST_REQUEST_TIME
 
-    # Make sure there is enough time between Reddit requests.
+    # Enforce minimum delay between Reddit requests.
     elapsed = time.time() - LAST_REQUEST_TIME
 
     if elapsed < REQUEST_DELAY:
-        wait_time = REQUEST_DELAY - elapsed
-
-        print(
-            f"⏳ Waiting {wait_time:.0f}s before "
-            f"checking r/{subreddit}..."
-        )
-
-        time.sleep(wait_time)
+        time.sleep(REQUEST_DELAY - elapsed)
 
     url = f"https://www.reddit.com/r/{subreddit}/new/.rss"
 
@@ -54,12 +72,25 @@ def get_posts(subreddit):
             retry_seconds = 120
 
         print(
-            f"⚠️ Reddit rate-limited r/{subreddit} (429). "
+            f"[WARNING] Reddit rate-limited r/{subreddit} (429). "
             f"Waiting {retry_seconds}s before continuing."
         )
 
         time.sleep(retry_seconds)
+        return []
 
+    # Skip private or restricted subreddits.
+    if response.status_code == 403:
+        print(
+            f"[SKIP] r/{subreddit} is private or restricted (403)."
+        )
+        return []
+
+    # Skip subreddits that don't exist.
+    if response.status_code == 404:
+        print(
+            f"[SKIP] r/{subreddit} does not exist (404)."
+        )
         return []
 
     response.raise_for_status()
@@ -69,6 +100,9 @@ def get_posts(subreddit):
     namespace = {
         "atom": "http://www.w3.org/2005/Atom"
     }
+
+    now_utc = datetime.now(timezone.utc)
+    cutoff = now_utc - timedelta(hours=MAX_POST_AGE_HOURS)
 
     posts = []
 
@@ -104,11 +138,24 @@ def get_posts(subreddit):
             namespace
         )
 
+<<<<<<< HEAD
         published_element = entry.find(
             "atom:published",
             namespace
         )
 
+=======
+        # ── 4-hour recency filter ──────────────────────────────────────────
+        post_time = _parse_timestamp(
+            updated_element.text if updated_element is not None else None
+        )
+
+        if post_time is not None and post_time < cutoff:
+            # Post is older than 4 hours — skip it.
+            continue
+
+        # ── Extract fields ─────────────────────────────────────────────────
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
         title = (
             title_element.text
             if title_element is not None
@@ -155,6 +202,7 @@ def get_posts(subreddit):
             body
         ).strip()
 
+<<<<<<< HEAD
         # Parse publication timestamp
         raw_date = ""
         if published_element is not None and published_element.text:
@@ -169,6 +217,18 @@ def get_posts(subreddit):
                 published_timestamp = dt.timestamp()
             except Exception:
                 published_timestamp = None
+=======
+        # Format post age for display
+        age_str = ""
+        if post_time is not None:
+            age_minutes = int(
+                (now_utc - post_time).total_seconds() / 60
+            )
+            if age_minutes < 60:
+                age_str = f"{age_minutes}m ago"
+            else:
+                age_str = f"{age_minutes // 60}h {age_minutes % 60}m ago"
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 
         posts.append({
             "id": post_id,
@@ -177,7 +237,11 @@ def get_posts(subreddit):
             "subreddit": subreddit,
             "author": author.replace("/u/", ""),
             "url": url,
+<<<<<<< HEAD
             "published_timestamp": published_timestamp,
+=======
+            "age": age_str,
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
         })
 
     return posts

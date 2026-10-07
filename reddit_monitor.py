@@ -11,9 +11,17 @@ from reddit_rss import get_posts
 from telegram_bot import send_message
 
 
+<<<<<<< HEAD
 PROCESSED_FILE = "processed_posts.json"
 MAX_POST_AGE_HOURS = 5
 MAX_POST_AGE_SECONDS = MAX_POST_AGE_HOURS * 3600
+=======
+# Use a path relative to this file so it works on any OS.
+PROCESSED_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "processed_posts.json"
+)
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 
 
 def load_processed_posts():
@@ -27,7 +35,7 @@ def load_processed_posts():
         return set(data)
 
     except (json.JSONDecodeError, OSError):
-        print("⚠️ Could not load processed posts. Starting fresh.")
+        print("[WARNING] Could not load processed posts. Starting fresh.")
         return set()
 
 
@@ -41,7 +49,7 @@ def save_processed_posts():
             )
 
     except OSError as error:
-        print(f"⚠️ Could not save processed posts: {error}")
+        print(f"[WARNING] Could not save processed posts: {error}")
 
 
 processed_posts = load_processed_posts()
@@ -84,14 +92,33 @@ def process_post(post):
         f"🔗 {post['url']}"
     )
 
+<<<<<<< HEAD
     print("\n🚨 ALERT SENT")
     print(message)
 
     send_message(message)
+=======
+    for match in matches:
+        age_label = f"  ({post['age']})" if post.get("age") else ""
+
+        message = (
+            "CRYPTO ALERT\n\n"
+            f"Type: {match}\n\n"
+            f"r/{post['subreddit']}{age_label}\n\n"
+            f"{title}\n\n"
+            f"u/{post['author']}\n\n"
+            f"{post['url']}"
+        )
+
+        print("\n--- MATCH FOUND ---")
+        print(message)
+
+        send_message(message)
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 
 
 def seed_existing_posts():
-    print("\n🌱 Seeding existing Reddit posts...")
+    print("\n[SEED] Seeding existing Reddit posts (last 4 hours)...")
     print("Existing posts will NOT trigger Telegram alerts.\n")
 
     for subreddit in SUBREDDITS:
@@ -114,7 +141,7 @@ def seed_existing_posts():
                 f"Error seeding r/{subreddit}: {error}"
             )
 
-    print("\n✅ Startup seeding complete.\n")
+    print("\n[OK] Startup seeding complete.\n")
 
 
 def check_reddit():
@@ -124,7 +151,7 @@ def check_reddit():
 
             posts = get_posts(subreddit)
 
-            print(f"Found {len(posts)} posts.")
+            print(f"  Found {len(posts)} recent posts (last 4h).")
 
             for post in posts:
                 process_post(post)
@@ -136,21 +163,28 @@ def check_reddit():
 
 
 def start_monitor(interval=60):
+<<<<<<< HEAD
     print("🚀 Crypto Reddit Alert Bot Started")
     print(f"📡 Monitoring {len(SUBREDDITS)} subreddits")
     print(f"⏱️ Checking every {interval} seconds")
     print(f"🕒 Alerting posts within the last {MAX_POST_AGE_HOURS} hours\n")
+=======
+    print("Crypto Reddit Alert Bot Started")
+    print(f"Monitoring {len(SUBREDDITS)} subreddits")
+    print(f"Checking every {interval} seconds")
+    print("Only alerting on posts from the last 4 hours\n")
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 
     if not processed_posts:
         seed_existing_posts()
     else:
         print(
-            f"💾 Loaded {len(processed_posts)} "
+            f"[OK] Loaded {len(processed_posts)} "
             "previously processed posts.\n"
         )
 
     while True:
         check_reddit()
 
-        print(f"\n⏳ Waiting {interval} seconds...\n")
+        print(f"\nWaiting {interval} seconds...\n")
         time.sleep(interval)

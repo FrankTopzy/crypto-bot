@@ -1,6 +1,7 @@
 import re
 
 SUBREDDITS = [
+    # Original
     "coinbase",
     "kraken",
     "trustwalletcommunity",
@@ -10,30 +11,94 @@ SUBREDDITS = [
     "phantom",
     "defi",
     "solana",
+    # New exchanges
+    "OKX",
+    "Bybit",
+    "Crypto_com",
+    "kucoin",
+    "gateio",
+    "Bitget",
+    # mexc subreddit is 404 (doesn't exist) - excluded
+    # New wallets & support
+    "ExodusWallet",
+    # CoinbaseWallet is a private subreddit (403) - excluded
+    "KrakenSupport",
+    # blockchain subreddit is private/restricted (403) - excluded
+    "ledger",
+    "TREZOR",
+    # Binance
+    "binance",
 ]
 
 
+# ── Scam / theft ─────────────────────────────────────────────────────────────
 SCAM_TERMS = [
+    # Direct scam statements
     "i was scammed",
     "i got scammed",
     "i've been scammed",
     "i have been scammed",
     "got scammed",
+    "being scammed",
+    "just got scammed",
     "crypto scam",
     "crypto scammer",
+    "crypto fraud",
+    # Theft
     "someone stole my crypto",
     "my crypto was stolen",
     "lost my crypto",
     "stole my crypto",
+<<<<<<< HEAD
     "scam",
     "scammed",
     "hacked",
     "drain",
     "drained",
     "phishing",
+=======
+    "my funds are gone",
+    "my coins are gone",
+    "my tokens are gone",
+    "balance is zero",
+    "balance went to zero",
+    "funds disappeared",
+    "coins disappeared",
+    "tokens disappeared",
+    # Hacking / compromise
+    "my account was hacked",
+    "account got hacked",
+    "got hacked",
+    "wallet was hacked",
+    "wallet got hacked",
+    "wallet drained",
+    "wallet has been drained",
+    "wallet emptied",
+    "account compromised",
+    "account was compromised",
+    "unauthorized transaction",
+    "unauthorized transfer",
+    "someone accessed my account",
+    "someone logged into my account",
+    "seed phrase stolen",
+    "private key stolen",
+    "seed phrase compromised",
+    "someone has my seed phrase",
+    # Phishing
+    "phishing",
+    "fake support",
+    "fake customer support",
+    "impersonator",
+    # Rug / exit scam
+    "rug pull",
+    "rugpull",
+    "exit scam",
+    "honeypot",
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
+# ── Withdrawal problems ───────────────────────────────────────────────────────
 WITHDRAWAL_TERMS = [
     "unable to withdraw",
     "can't withdraw",
@@ -45,11 +110,49 @@ WITHDRAWAL_TERMS = [
     "withdrawal is pending",
     "won't let me withdraw",
     "not letting me withdraw",
+<<<<<<< HEAD
     "withdrawal issue",
     "withdraw",
+=======
+    "withdrawal blocked",
+    "withdrawal rejected",
+    "withdrawal cancelled",
+    "withdrawal not arriving",
+    "withdrawal not received",
+    "withdrawal delayed",
+    "waiting for my withdrawal",
+    "funds stuck",
+    "funds on hold",
+    "funds frozen",
+    "funds locked",
+    "funds not available",
+    "funds not released",
+    "cannot get my funds",
+    "can't get my funds",
+    "can't access my funds",
+    "cannot access my funds",
+    "unable to access my funds",
+    "cannot withdraw my funds",
+    "can't withdraw my funds",
+    "account frozen",
+    "account locked",
+    "account suspended",
+    "account restricted",
+    "account on hold",
+    "locked out of my account",
+    "can't login",
+    "cannot login",
+    "can't log in",
+    "transaction stuck",
+    "transaction pending forever",
+    "pending for days",
+    "pending for hours",
+    "transaction not confirmed",
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
+# ── Wrong transfer / send mistakes ───────────────────────────────────────────
 TRANSFER_TERMS = [
     "sent crypto to another account",
     "sent crypto to the wrong account",
@@ -61,13 +164,29 @@ TRANSFER_TERMS = [
     "sent btc to the wrong",
     "sent eth to the wrong",
     "sent usdt to the wrong",
+<<<<<<< HEAD
     "wrong address",
     "wrong network",
     "wrong memo",
     "wrong tag",
+=======
+    "sent to wrong address",
+    "wrong wallet address",
+    "wrong address",
+    "sent to scammer",
+    "sent to a scammer",
+    "sent to the scammer",
+    "sent funds to wrong",
+    "sent money to wrong",
+    "mistakenly sent",
+    "accidentally transferred",
+    "sent to incorrect address",
+    "transferred to wrong wallet",
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
+# ── Crypto terms used to confirm context ─────────────────────────────────────
 CRYPTO_TERMS = [
     "crypto",
     "cryptocurrency",
@@ -81,6 +200,7 @@ CRYPTO_TERMS = [
     "sol",
     "bnb",
     "xrp",
+    "ripple",
     "cardano",
     "ada",
     "dogecoin",
@@ -99,12 +219,36 @@ CRYPTO_TERMS = [
     "phantom",
     "ledger",
     "tangem",
+<<<<<<< HEAD
     "airdrop",
     "dex",
     "swap",
     "seed phrase",
     "private key",
     "smart contract",
+=======
+    "trezor",
+    "exodus",
+    "bybit",
+    "okx",
+    "kucoin",
+    "binance",
+    "gate.io",
+    "gateio",
+    "bitget",
+    "crypto.com",
+    "defi",
+    "nft",
+    "seed phrase",
+    "private key",
+    "recovery phrase",
+    "mnemonic",
+    "smart contract",
+    "transaction hash",
+    "txid",
+    "gas fee",
+    "gas fees",
+>>>>>>> 974d4d4c0d79250066c3d854e5bd05870be9f0c5
 ]
 
 
@@ -115,12 +259,12 @@ def find_matches(title, body):
 
     for term in SCAM_TERMS:
         if term in text:
-            matches.append("Possible Scam")
+            matches.append("Possible Scam / Hack")
             break
 
     for term in WITHDRAWAL_TERMS:
         if term in text:
-            matches.append("Withdrawal Problem")
+            matches.append("Withdrawal / Account Problem")
             break
 
     for term in TRANSFER_TERMS:
