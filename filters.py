@@ -1,3 +1,5 @@
+import re
+
 SUBREDDITS = [
     # Original
     "coinbase",
@@ -47,6 +49,12 @@ SCAM_TERMS = [
     "my crypto was stolen",
     "lost my crypto",
     "stole my crypto",
+    "scam",
+    "scammed",
+    "hacked",
+    "drain",
+    "drained",
+    "phishing",
     "my funds are gone",
     "my coins are gone",
     "my tokens are gone",
@@ -99,6 +107,8 @@ WITHDRAWAL_TERMS = [
     "withdrawal is pending",
     "won't let me withdraw",
     "not letting me withdraw",
+    "withdrawal issue",
+    "withdraw",
     "withdrawal blocked",
     "withdrawal rejected",
     "withdrawal cancelled",
@@ -148,6 +158,10 @@ TRANSFER_TERMS = [
     "sent btc to the wrong",
     "sent eth to the wrong",
     "sent usdt to the wrong",
+    "wrong address",
+    "wrong network",
+    "wrong memo",
+    "wrong tag",
     "sent to wrong address",
     "wrong wallet address",
     "wrong address",
@@ -196,6 +210,12 @@ CRYPTO_TERMS = [
     "phantom",
     "ledger",
     "tangem",
+    "airdrop",
+    "dex",
+    "swap",
+    "seed phrase",
+    "private key",
+    "smart contract",
     "trezor",
     "exodus",
     "bybit",
@@ -240,11 +260,14 @@ def find_matches(title, body):
             matches.append("Crypto Transfer Issue")
             break
 
-    has_crypto_context = any(
-        term in text for term in CRYPTO_TERMS
-    )
+    for term in CRYPTO_TERMS:
+        pattern = r"\b" + re.escape(term) + r"\b"
+        if re.search(pattern, text):
+            matches.append("Crypto Related")
+            break
 
-    if not has_crypto_context:
-        return []
+    # If no specific category matched, it is still a new post under the subreddit
+    if not matches:
+        matches.append("New Post")
 
     return matches

@@ -30,6 +30,6 @@ def send_message(message):
 
         return result
 
-    except requests.exceptions.RequestException as error:
+    except Exception as error:
         print(f"❌ Failed to send Telegram message: {error}")
         return None

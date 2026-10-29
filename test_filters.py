@@ -21,6 +21,10 @@ tests = [
     {
         "title": "I was scammed buying a car",
         "body": "Someone took my money after I tried to buy a car."
+    },
+    {
+        "title": "Question about account settings",
+        "body": "How do I change my notification email address?"
     }
 ]
 
