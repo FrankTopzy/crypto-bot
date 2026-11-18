@@ -12,7 +12,7 @@ SUBREDDITS = [
     "defi",
     "solana",
     # New exchanges
-    "OKX",
+    # OKX subreddit returns 404 (banned or removed) — excluded
     "Bybit",
     "Crypto_com",
     "kucoin",
