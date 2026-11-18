@@ -9,11 +9,14 @@ import requests
 
 LAST_REQUEST_TIME = 0
 
-# 3s delay ensures polling across all subreddits finishes promptly without overloading.
-REQUEST_DELAY = 3
+# 5s between requests (up from 3s) — gives Reddit breathing room.
+REQUEST_DELAY = 5
 
 # Only return posts made within the last 5 hours.
 MAX_POST_AGE_HOURS = 5
+
+# Track consecutive 429s for exponential backoff.
+_consecutive_429s = 0
 
 HEADERS = {
     "User-Agent": "CryptoRedditAlertBot/1.0 by FrankTopzy"
@@ -34,43 +37,59 @@ def _parse_timestamp(text):
 
 
 def get_posts(subreddit):
-    global LAST_REQUEST_TIME
+    """
+    Fetch recent posts for one subreddit or a combined multi-sub string
+    (e.g. "coinbase+kraken+metamask").
+
+    When fetching a combined feed, each post's subreddit is extracted from
+    the <category term="..."> element in the Atom entry.
+
+    Returns a list of post dicts.
+    """
+    global LAST_REQUEST_TIME, _consecutive_429s
 
     # Enforce minimum delay between Reddit requests.
     elapsed = time.time() - LAST_REQUEST_TIME
-
     if elapsed < REQUEST_DELAY:
         time.sleep(REQUEST_DELAY - elapsed)
 
-    url = f"https://www.reddit.com/r/{subreddit}/new/.rss"
+    url = f"https://www.reddit.com/r/{subreddit}/new/.rss?limit=50"
 
-    response = requests.get(
-        url,
-        headers=HEADERS,
-        timeout=20
-    )
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=30)
+    except requests.RequestException as e:
+        print(f"[ERROR] Request failed for r/{subreddit}: {e}")
+        LAST_REQUEST_TIME = time.time()
+        return []
 
     LAST_REQUEST_TIME = time.time()
 
-    # Handle Reddit rate limiting.
+    # Handle Reddit rate limiting with exponential backoff.
     if response.status_code == 429:
-        retry_after = response.headers.get("Retry-After")
+        _consecutive_429s += 1
 
+        retry_after = response.headers.get("Retry-After")
         if retry_after:
             try:
-                retry_seconds = int(retry_after)
+                base_wait = int(retry_after)
             except ValueError:
-                retry_seconds = 120
+                base_wait = 60
         else:
-            retry_seconds = 120
+            base_wait = 60
+
+        # Exponential backoff: base * 2^(n-1), capped at 600s.
+        wait_time = min(base_wait * (2 ** (_consecutive_429s - 1)), 600)
 
         print(
             f"[WARNING] Reddit rate-limited r/{subreddit} (429). "
-            f"Waiting {retry_seconds}s before continuing."
+            f"Backoff #{_consecutive_429s}, waiting {wait_time}s."
         )
 
-        time.sleep(retry_seconds)
+        time.sleep(wait_time)
         return []
+
+    # Reset backoff counter on any non-429 response.
+    _consecutive_429s = 0
 
     # Skip private or restricted subreddits.
     if response.status_code == 403:
@@ -136,6 +155,11 @@ def get_posts(subreddit):
             namespace
         )
 
+        category_element = entry.find(
+            "atom:category",
+            namespace
+        )
+
         # ── 5-hour recency filter ──────────────────────────────────────────
         raw_date = ""
         if published_element is not None and published_element.text:
@@ -173,10 +197,18 @@ def get_posts(subreddit):
             else "unknown"
         )
 
-        url = ""
+        # Extract subreddit from <category> (works for multi-sub feeds).
+        # Falls back to the subreddit string passed by the caller.
+        post_subreddit = subreddit
+        if category_element is not None:
+            term = category_element.attrib.get("term", "")
+            if term:
+                post_subreddit = term
+
+        entry_url = ""
 
         if link_element is not None:
-            url = link_element.attrib.get(
+            entry_url = link_element.attrib.get(
                 "href",
                 ""
             )
@@ -212,9 +244,9 @@ def get_posts(subreddit):
             "id": post_id,
             "title": title,
             "body": body,
-            "subreddit": subreddit,
+            "subreddit": post_subreddit,
             "author": author.replace("/u/", ""),
-            "url": url,
+            "url": entry_url,
             "age": age_str,
             "published_timestamp": published_timestamp,
         })

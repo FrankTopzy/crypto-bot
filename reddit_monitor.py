@@ -11,13 +11,21 @@ from reddit_rss import get_posts
 from telegram_bot import send_message
 
 
-# Use a path relative to this file so it works on Railway Linux container and Windows alike.
+# Use a path relative to this file so it works on Render/Railway and Windows.
 PROCESSED_FILE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "processed_posts.json"
 )
 MAX_POST_AGE_HOURS = 5
 MAX_POST_AGE_SECONDS = MAX_POST_AGE_HOURS * 3600
+
+# Prevent processed_posts.json from growing without bound.
+MAX_PROCESSED_POSTS = 5000
+
+# How many subreddits to combine per RSS request (r/a+b+c+d+e/new/.rss).
+# 5 subs × 5 batches = 25 → covers all 21 subreddits in ~4-5 requests
+# instead of the old 21 individual requests.
+BATCH_SIZE = 5
 
 
 def load_processed_posts():
@@ -37,9 +45,21 @@ def load_processed_posts():
 
 def save_processed_posts():
     try:
+        post_list = list(processed_posts)
+
+        # Prune if the set has grown too large.
+        if len(post_list) > MAX_PROCESSED_POSTS:
+            post_list = post_list[-MAX_PROCESSED_POSTS:]
+            processed_posts.clear()
+            processed_posts.update(post_list)
+            print(
+                f"[PRUNE] Trimmed processed posts to "
+                f"{MAX_PROCESSED_POSTS}"
+            )
+
         with open(PROCESSED_FILE, "w", encoding="utf-8") as file:
             json.dump(
-                list(processed_posts),
+                post_list,
                 file,
                 indent=2
             )
@@ -49,6 +69,12 @@ def save_processed_posts():
 
 
 processed_posts = load_processed_posts()
+
+
+def _make_batches(subreddits, size):
+    """Split a list into chunks of the given size."""
+    for i in range(0, len(subreddits), size):
+        yield subreddits[i:i + size]
 
 
 def process_post(post):
@@ -96,14 +122,18 @@ def process_post(post):
 
 
 def seed_existing_posts():
-    print(f"\n[SEED] Seeding existing Reddit posts (last {MAX_POST_AGE_HOURS} hours)...")
+    print(
+        f"\n[SEED] Seeding existing Reddit posts "
+        f"(last {MAX_POST_AGE_HOURS} hours)..."
+    )
     print("Existing posts will NOT trigger Telegram alerts.\n")
 
-    for subreddit in SUBREDDITS:
+    for batch in _make_batches(SUBREDDITS, BATCH_SIZE):
+        combined = "+".join(batch)
         try:
-            print(f"Seeding r/{subreddit}...")
+            print(f"Seeding r/{combined}...")
 
-            posts = get_posts(subreddit)
+            posts = get_posts(combined)
 
             for post in posts:
                 processed_posts.add(post["id"])
@@ -116,18 +146,19 @@ def seed_existing_posts():
 
         except Exception as error:
             print(
-                f"Error seeding r/{subreddit}: {error}"
+                f"Error seeding r/{combined}: {error}"
             )
 
     print("\n[OK] Startup seeding complete.\n")
 
 
 def check_reddit():
-    for subreddit in SUBREDDITS:
+    for batch in _make_batches(SUBREDDITS, BATCH_SIZE):
+        combined = "+".join(batch)
         try:
-            print(f"Checking r/{subreddit}...")
+            print(f"Checking r/{combined}...")
 
-            posts = get_posts(subreddit)
+            posts = get_posts(combined)
 
             print(f"  Found {len(posts)} recent posts.")
 
@@ -136,11 +167,11 @@ def check_reddit():
 
         except Exception as error:
             print(
-                f"Error checking r/{subreddit}: {error}"
+                f"Error checking r/{combined}: {error}"
             )
 
 
-def start_monitor(interval=60):
+def start_monitor(interval=120):
     print("🚀 Crypto Reddit Alert Bot Started")
     print(f"📡 Monitoring {len(SUBREDDITS)} subreddits")
     print(f"⏱️ Checking every {interval} seconds")
